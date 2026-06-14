@@ -39,6 +39,14 @@ npx @tarsk/mastodon "Hello #fediverse"
 
 Add `--json` to any command for machine-readable output.
 
+## Install as a skill
+
+Install the Mastodon skill for agents:
+
+```bash
+npx --yes skills add https://github.com/WebNativeLLC/mastodon --skill mastodon
+```
+
 ## Commands
 
 | Command | Description |
