@@ -1,0 +1,191 @@
+# @tarsk/mastodon
+
+> Command-line interface for Mastodon. Run with `npx @tarsk/mastodon`. Built on masto.js.
+
+@tarsk/mastodon is a Node.js CLI (requires Node >= 20) for posting statuses, reading timelines, checking your account, and searching Mastodon instances. Authentication uses environment variables only — no config files or OAuth flow.
+
+## Setup
+
+Create an access token on your Mastodon instance:
+
+1. Go to Preferences → Development → New Application
+2. Set an application name (other fields can stay as defaults)
+3. Enable scopes: `read` and `write`
+4. Copy **Your access token**
+
+Set required environment variables before every command:
+
+```bash
+export MASTODON_URL=https://mastodon.social
+export MASTODON_TOKEN=your_token_here
+```
+
+- `MASTODON_URL` — instance base URL (trailing slashes are stripped)
+- `MASTODON_TOKEN` — personal access token from step above
+
+If either variable is missing, the CLI exits with an error message.
+
+## Invocation
+
+```bash
+npx @tarsk/mastodon [command] [args] [options]
+```
+
+Local development (from repo root):
+
+```bash
+npm run build
+node dist/cli.js [command] [args] [options]
+```
+
+Show help:
+
+```bash
+npx @tarsk/mastodon --help
+npx @tarsk/mastodon help
+```
+
+## Global options
+
+- `--json` — output raw JSON to stdout (works on all commands)
+- `--help`, `-h` — print usage and exit
+
+## Default behavior
+
+If the first argument is not a known subcommand, all arguments are treated as a `post` command. These are equivalent:
+
+```bash
+npx @tarsk/mastodon "Hello #fediverse"
+npx @tarsk/mastodon post "Hello #fediverse"
+```
+
+## Commands
+
+### post
+
+Publish a status. On success, prints the status URL to stdout (unless `--json`).
+
+```bash
+npx @tarsk/mastodon post "Hello world"
+npx @tarsk/mastodon post "Photo post" --media ./cat.png --alt "A cat"
+npx @tarsk/mastodon post "Reply" --reply-to 123456789
+npx @tarsk/mastodon post "DM" --visibility direct
+npx @tarsk/mastodon post "Multi-image" --media a.png --media b.png --alt "First" --alt "Second"
+```
+
+Options:
+
+- `--media path` — local file to attach (repeatable, max 4 attachments)
+- `--alt text` — alt text / media description (repeatable; if fewer alt texts than media, the first alt text is reused)
+- `--visibility public|unlisted|private|direct` — default: `public`
+- `--reply-to id` — status ID to reply to
+- `--json` — output full status object as JSON
+
+Post text is taken from positional arguments joined by spaces.
+
+### timeline
+
+Fetch statuses from a timeline.
+
+```bash
+npx @tarsk/mastodon timeline
+npx @tarsk/mastodon timeline --type home --limit 5
+npx @tarsk/mastodon timeline --type public --limit 10
+npx @tarsk/mastodon timeline --type local --limit 10
+npx @tarsk/mastodon timeline --json
+```
+
+Options:
+
+- `--type home|public|local` — default: `home`
+  - `home` — statuses from followed users
+  - `public` — federated public timeline
+  - `local` — public timeline filtered to local statuses only
+- `--limit N` — number of statuses to fetch (default: 20)
+- `--json` — output array of status objects as JSON
+
+Human-readable output format per status:
+
+```
+@username · 2h
+Post text snippet...
+https://instance/@user/123456789
+```
+
+### whoami
+
+Show the authenticated account.
+
+```bash
+npx @tarsk/mastodon whoami
+npx @tarsk/mastodon whoami --json
+```
+
+Human-readable output: `@acct · display name · bio snippet`
+
+### search
+
+Search the instance.
+
+```bash
+npx @tarsk/mastodon search "typescript"
+npx @tarsk/mastodon search "@user" --type accounts
+npx @tarsk/mastodon search "fediverse" --type hashtags
+npx @tarsk/mastodon search "hello world" --type statuses --json
+```
+
+Options:
+
+- `--type accounts|hashtags|statuses` — default: `statuses`
+- `--json` — output full search result object as JSON
+
+Query is taken from positional arguments joined by spaces. Returns up to 20 results.
+
+Human-readable output groups results under Accounts, Hashtags, and Statuses headings.
+
+## Output modes
+
+| Command  | Default output              | With `--json`        |
+|----------|-----------------------------|----------------------|
+| post     | Status URL                  | Full status object   |
+| timeline | Formatted status list       | Array of statuses    |
+| whoami   | `@acct · name · bio`        | Full account object  |
+| search   | Grouped human-readable list | Full search object   |
+
+Errors are written to stderr. The CLI exits with code 1 on errors.
+
+## Examples for automation
+
+Post and capture the URL:
+
+```bash
+URL=$(npx @tarsk/mastodon post "Automated post")
+echo "Posted: $URL"
+```
+
+Fetch timeline as JSON for scripting:
+
+```bash
+npx @tarsk/mastodon timeline --type home --limit 5 --json | jq '.[].content'
+```
+
+Verify credentials:
+
+```bash
+npx @tarsk/mastodon whoami --json | jq -r '.acct'
+```
+
+## Limitations (v1)
+
+Not supported in this version:
+
+- Config file or `auth` subcommand
+- OAuth browser flow
+- Follow, unfollow, favourite, boost, delete, notifications
+- Streaming timelines
+
+## Docs
+
+- [README.md](README.md): Quick start and command summary
+- [masto.js](https://github.com/neet/masto.js): Underlying Mastodon API client
+- [Mastodon API docs](https://docs.joinmastodon.org/api/): Official API reference

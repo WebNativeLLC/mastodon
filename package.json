@@ -1,0 +1,26 @@
+{
+  "name": "@tarsk/mastodon",
+  "version": "0.1.0",
+  "description": "CLI for Mastodon powered by masto.js",
+  "type": "module",
+  "bin": {
+    "mastodon": "dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "masto": "^7.11.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  }
+}
